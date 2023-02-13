@@ -1,0 +1,95 @@
+<?php
+	header('Cache-Control: no-cache');
+	header('Cache-Control: no-store');
+	header('Pragma: no-cache');
+	class SMTP{
+
+		private $user = "";
+		private $pass = "";
+		
+		private $conexion = null;
+		
+		private $newline = "\r\n";
+		
+		private $subject = "";
+		private $to = "";
+		private $from = "";
+		private $log = array();
+		
+		public function __construct($user,$pass){
+			$this->user = $user;
+			$this->pass = $pass;
+
+		}
+		public function conectar($protocol,$server,$port){
+			
+			$addr = $protocol.'://'.$server;
+			$this->conexion = fsockopen($addr,$port,$errno,$errstr,45);
+			$this->validar_conexion();
+		}
+		
+		public function validar_conexion(){
+//			$smtpResponse = fgets($this->conexion);
+			if(empty($this->conexion)) {
+				$this->log['connection'] = "Failed to connect: ".$smtpResponse;
+				return false;
+			}else{
+				$this->log['connection'] = "<p>Connected to: ".$smtpResponse."<p />Connection accepted<br />".$smtpResponse."<p />Continuing<p /><br />";
+				return true;
+			}
+		}
+		
+		public function mandar(){
+			
+			if($this->validar_conexion()){
+				
+				
+				fwrite($this->conexion, "HELO ".($_SERVER). $newLine);
+				$smtpResponse = fgets($this->conexion, 4096);
+				$this->log['heloresponse'] = $smtpResponse;
+/*/				
+			
+				fwrite($this->conexion,"AUTH LOGIN".$this->newLine);
+//				$smtpResponse = fgets($this->conexion,1024);
+				$this->log['authrequest'] = $smtpResponse;
+			
+				fwrite($this->conexion, base64_encode($this->user) . $this->newLine);
+//				$smtpResponse = fgets($this->conexion,2);
+				$this->log['authusername'] = $smtpResponse;
+				 
+				//send the password
+				fwrite($this->conexion, base64_encode($this->pass) . $this->newLine);
+//				$smtpResponse = fgets($this->conexion,2);
+				$this->log['authpassword'] = $smtpResponse;
+/*/
+
+			}
+		}
+		
+		public function agregar_asunto($asunto){
+			$this->subject = 'Subject: '.$asunto.$this->newline;
+		}
+		public function agregar_remitente($remitente){
+			$this->from = 'From: '.$remitente.$this->newline;
+		}
+		
+		public function desconectar(){
+			fclose($this->conexion);
+		}
+		
+		public function log_mail(){
+			return($this->log);
+		}
+		
+	}
+	
+	$con = new SMTP('Serginho168@gmail.com','Ser/170136187');
+	
+	$con->conectar('ssl','smtp.gmail.com',465);
+	
+	$con->mandar();
+	
+	$con->desconectar();
+	$log = $con->log_mail();
+	
+?>
